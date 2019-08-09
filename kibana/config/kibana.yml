@@ -1,0 +1,10 @@
+console.enabled: true
+
+server.name: elk
+server.host: "0"
+
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+elasticsearch.username: elastic
+elasticsearch.password: Qwety12!
+
+xpack.security.enabled: false

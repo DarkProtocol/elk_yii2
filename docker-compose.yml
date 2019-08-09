@@ -1,0 +1,89 @@
+version: '3'
+
+services:
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.3.0
+    volumes:
+     - ./elasticsearch/data:/var/lib/elasticsearch:rw
+     - ./elasticsearch/backups:/var/backups:rw
+     - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ports:
+     - 9200:9200
+     - 9300:9300
+    environment:
+     - ES_JAVA_OPTS=-Xmx256m -Xms256m
+     - ELASTIC_USERNAME=elastic
+     - ELASTIC_PASSWORD=Qwety12!
+    networks:
+     - elk
+
+  logstash:
+    container_name: logstash
+    image: docker.elastic.co/logstash/logstash:7.3.0
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./logstash/patterns:/patterns:ro
+      - ./logs:/logs:rw
+    ports:
+      - 5044:5044
+    environment:
+      - LS_JAVA_OPTS=-Xmx256m -Xms256m
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+
+  filebeat:
+    container_name: filebeat
+    image: docker.elastic.co/beats/filebeat:7.3.0
+    restart: always
+    user: root
+    depends_on:
+      - logstash
+    volumes:
+      # CODE LOGS
+      - ../Code/backend/runtime/logs:/logs/backend:rw 
+      - ../Code/frontend/runtime/logs:/logs/frontend:rw
+      - ../Code/console/runtime/logs:/logs/console:rw
+      # FILEBEAT LOG AND DATA
+      - ./filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./filebeat/data:/usr/share/filebeat/data
+      # disable strict permission checks
+    command: ["--strict.perms=false"]
+    networks:
+      - elk
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:7.3.0
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    depends_on:
+      - elasticsearch
+    ports:
+     - 5601:5601
+    networks:
+    - elk
+#
+#  proxy:
+#    container_name: proxy
+#    image: nginx:latest
+#    depends_on:
+#      - kibana
+#    restart: always
+#    volumes:
+#      - ./proxy/nginx/conf.d:/etc/nginx/conf.d:rw
+#      #- ./logs/nginx.error.log:/var/log/nginx.error.log:rw
+#      #- ./logs/nginx.access.log:/var/log/nginx.access.log:rw
+#    ports:
+#      - 80:80
+#    networks:
+#      - elk
+#
+
+networks:
+  elk:
+    driver: bridge

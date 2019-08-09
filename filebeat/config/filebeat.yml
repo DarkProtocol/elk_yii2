@@ -1,0 +1,51 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+    - /logs/backend/app.log
+    fields:
+      type: backend_app
+    start_position: "end"
+
+    #multiline options
+    multiline.pattern: '^([0-9]{4}\-[0-9]{2}\-[0-9]{2}\s+[0-9]{2}\:[0-9]{2}\:[0-9]{2})\s*\[.*\]'
+    multiline.negate: true
+    multiline.match: after
+
+    fields_under_root: true
+    scan_frequency: 10s
+
+  - type: log
+    enabled: true
+    paths:
+    - /logs/frontend/app.log
+    fields:
+      type: frontend_app
+    start_position: "end"
+
+    #multiline options
+    multiline.pattern: '^([0-9]{4}\-[0-9]{2}\-[0-9]{2}\s+[0-9]{2}\:[0-9]{2}\:[0-9]{2})\s*\[.*\]'
+    multiline.negate: true
+    multiline.match: after
+
+    fields_under_root: true
+    scan_frequency: 10s
+
+  - type: log
+    enabled: true
+    paths:
+    - /logs/console/app.log
+    fields:
+      type: console_app
+    start_position: "end"
+
+    #multiline options
+    multiline.pattern: '^([0-9]{4}\-[0-9]{2}\-[0-9]{2}\s+[0-9]{2}\:[0-9]{2}\:[0-9]{2})\s*\[.*\]'
+    multiline.negate: true
+    multiline.match: after
+
+    fields_under_root: true
+    scan_frequency: 10s
+
+output.logstash:
+  hosts: ["logstash:5044"]
